@@ -1,21 +1,43 @@
 (ns logger.core-test
   (:require [logger.core :as logger]
-            [clojure.test :refer [deftest testing is]])
-  (:import (java.time Instant)))
+            [clojure.test :refer [deftest testing is]]))
 
 
-(deftest log-str-test
-  (with-redefs [logger/now (fn [] (-> Instant/EPOCH .toEpochMilli))]
-    (testing "log-str logs response and request maps"
-      (is (= (logger/log-str
-                {:request-method :get :uri "/"}
-                {:status 200 :route :routes.home/index :headers {"Content-Type" "text/plain"}}
-                (logger/now))
-             "1970-01-01 00:00:00 +0000 GET \"/\" :routes.home/index 200 text/plain 0 ms")))
+(deftest stringify-test
+  (testing "stringify map with strings"
+    (is (= (logger/stringify {:a "a" :b "b"})
+           ":a=a :b=b")))
 
-    (testing "log-str logs response and request maps"
-      (is (= (logger/log-str
-                {:request-method :get :uri "/"}
-                {:status 200 :route :routes.home/index :headers {"Content-Type" "text/plain"}}
-                (logger/now))
-             "1970-01-01 00:00:00 +0000 GET \"/\" :routes.home/index 200 text/plain 0 ms")))))
+  (testing "stringify map with numbers"
+    (is (= (logger/stringify {:a 1 :b -1})
+           ":a=1 :b=-1")))
+
+  (testing "stringify map with booleans"
+    (is (= (logger/stringify {:a false})
+           ":a=false"))))
+
+
+(deftest log-line-test
+  (with-redefs [logger/timestamp (fn [] "timestamp")]
+    (testing "log-line with strings"
+      (is (= (logger/line "Request started" {:request-method "GET" :uri "/"})
+             "[timestamp] Request started :request-method=GET :uri=/")))
+
+    (testing "log-line with number"
+      (is (= (logger/line "User authenticated" {:user-id 123})
+             "[timestamp] User authenticated :user-id=123")))))
+
+
+(deftest middleware-test
+  (let [log-lines (atom [])]
+    (with-redefs [logger/timestamp (fn [] "timestamp")
+                  println (fn [& [arg]] (swap! log-lines conj arg))
+                  logger/now (fn [] 0)]
+      ((logger/logger (fn [request] {:status 200 :headers {"Content-Type" "text/html"}}))
+       {:request-method :get
+        :uri "/"
+        :route "home/index"})
+      (testing "middleware test"
+        (is (= @log-lines
+               ["[timestamp] Request started request-method=GET route=home/index uri=/"
+                "[timestamp] Request finished status=200 content-type=text/html duration=0ms"]))))))
