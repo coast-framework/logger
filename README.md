@@ -3,11 +3,10 @@
 
 ## Installation
 
-Make your `deps.edn` look like this:
+Make your [deps.edn](https://clojure.org/guides/deps_and_cli) look like this:
 
 ```clojure
-{:deps {coast-framework/logger {:git/url "https://github.com/coast-framework/logger"
-                                :sha "6911e0f927211efb168877504e03290c7462ee40"}}}
+coast-framework/logger {:mvn/version "1.0.0"}
 ```
 
 ## Usage
