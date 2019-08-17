@@ -18,12 +18,14 @@ Require it like this
   (:require [logger.core :as logger]))
 ```
 
-Log stuff like this
+Log stuff like this, returns a string
 
 ```clojure
-(logger/log {:request-method :get :uri "/"}
-  {:status 200 :headers {"Content-Type" "text/plain"}}
-  (logger/now))
+(logger/line "Request started" {"request-method" "GET" "uri" "/"})
+; => "[timestamp] Request started request-method=GET" uri=/
+
+(logger/line "Request finished" {"status" 200 "content-type" "text/plain"})
+; => "[timestamp] Request finished status=200 content-type=text/plain"
 ```
 
 Use the middleware like this
@@ -32,6 +34,15 @@ Use the middleware like this
 (def app (-> (your-ring-app)
              (logger/logger)))
 ```
+
+This calls `println` twice and logs *two* ring request/response lines that look like this:
+
+```
+[timestamp] Request started request-method=GET route=home/index uri=/
+[timestamp] Request finished status=200 duration=10ms content-type=text/html
+```
+
+*Note* route is only logged if there is a `:route` keyword in the request map
 
 ## Testing
 
