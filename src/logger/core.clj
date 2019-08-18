@@ -33,7 +33,7 @@
 
 
 (defn timestamp []
-  (format "[%s]" (-> (now) (zoned) (fmt "yyyy-MM-dd HH:mm:ss xx"))))
+  (-> (now) (zoned) (fmt "yyyy-MM-dd HH:mm:ss xx")))
 
 
 (defn line [message data]
